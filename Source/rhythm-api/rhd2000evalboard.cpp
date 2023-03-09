@@ -84,11 +84,10 @@ int Rhd2000EvalBoard::open(const char* libname)
 
     std::cout << std::endl << "Scanning USB for Opal Kelly devices..." << std::endl << std::endl;
 
-    nDevices = dev->GetDeviceCount(); // slow
+    nDevices = dev->GetDeviceCount();
 
     std::cout << "Found " << nDevices << " Opal Kelly device" << ((nDevices == 1) ? "" : "s") <<
             " connected:" << std::endl;
-
     for (i = 0; i < nDevices; ++i) {
         std::cout << "  Device #" << i + 1 << ": Opal Kelly " <<
                 opalKellyModelName(dev->GetDeviceListModel(i)).c_str() <<
@@ -101,13 +100,13 @@ int Rhd2000EvalBoard::open(const char* libname)
 	{
         okCFrontPanel::BoardModel model = dev->GetDeviceListModel(i);
 
-        if (model == OK_PRODUCT_XEM6010LX45 || model == OK_PRODUCT_XEM6310LX45) //the two models we use
+		if (model == OK_PRODUCT_XEM6010LX45 || model == OK_PRODUCT_XEM6310LX45) //the two models we use
 		{
 			serialNumber = serialNumber = dev->GetDeviceListSerial(i);
 
-            std::cout << "Trying to open device with serial " << serialNumber.c_str() << std::endl;
+			std::cout << "Trying to open device with serial " << serialNumber.c_str() << std::endl;
 
-            if (dev->OpenBySerial(serialNumber) == okCFrontPanel::NoError) //
+			if (dev->OpenBySerial(serialNumber) == okCFrontPanel::NoError) 
 			{
 				std::cout << "Device opened" << std::endl;
 				if (model == OK_PRODUCT_XEM6310LX45)
@@ -135,7 +134,7 @@ int Rhd2000EvalBoard::open(const char* libname)
     std::cout << "Opal Kelly device firmware version: " << dev->GetDeviceMajorVersion() << "." <<
             dev->GetDeviceMinorVersion() << std::endl;
     std::cout << "Opal Kelly device serial number: " << dev->GetSerialNumber().c_str() << std::endl;
-    std::cout << "Opal Kelly device ID std::string: " << dev->GetDeviceID().c_str() << std::endl << std::endl;
+    std::cout << "Opal Kelly device ID string: " << dev->GetDeviceID().c_str() << std::endl << std::endl;
 
     return 1;
 }
@@ -673,16 +672,16 @@ void Rhd2000EvalBoard::selectAuxCommandLength(AuxCmdSlot auxCommandSlot, int loo
 
     switch (auxCommandSlot) {
     case AuxCmd1:
-        dev->SetWireInValue(WireInAuxCmdLoop1, loopIndex);
-        dev->SetWireInValue(WireInAuxCmdLength1, endIndex);
+        dev->SetWireInValue(WireInAuxCmdLoop, loopIndex, 0x000003ff);
+        dev->SetWireInValue(WireInAuxCmdLength, endIndex,0x000003ff);
         break;
     case AuxCmd2:
-        dev->SetWireInValue(WireInAuxCmdLoop2, loopIndex);
-        dev->SetWireInValue(WireInAuxCmdLength2, endIndex);
+        dev->SetWireInValue(WireInAuxCmdLoop, loopIndex << 10, 0x000003ff << 10);
+        dev->SetWireInValue(WireInAuxCmdLength, endIndex << 10 , 0x000003ff < 10);
         break;
     case AuxCmd3:
-        dev->SetWireInValue(WireInAuxCmdLoop3, loopIndex);
-        dev->SetWireInValue(WireInAuxCmdLength3, endIndex);
+        dev->SetWireInValue(WireInAuxCmdLoop, loopIndex << 20, 0x000003ff << 20);
+        dev->SetWireInValue(WireInAuxCmdLength, endIndex << 20, 0x000003ff < 20);
         break;
     }
     dev->UpdateWireIns();
@@ -705,7 +704,7 @@ void Rhd2000EvalBoard::resetBoard()
         dev->SetWireInValue(WireInMultiUse, DDR_BLOCK_SIZE);
         dev->UpdateWireIns();
         dev->ActivateTriggerIn(TrigInOpenEphys, 17);
-        std::cout << "DDR burst set to " << DDR_BLOCK_SIZE << std::endl;
+        std::cout << "DDR burst set to " << DDR_BLOCK_SIZE << std::std::endl;
     }
 }
 
@@ -740,8 +739,8 @@ void Rhd2000EvalBoard::setMaxTimeStep(unsigned int maxTimeStep)
 void Rhd2000EvalBoard::run()
 {
     dev->UpdateWireOuts();
-//  std::std::cout << "Block size: " << dev->GetWireOutValue(0x26) << std::std::endl;
-//  std::std::cout << "Burst len: " << dev->GetWireOutValue(0x27) << std::std::endl;
+//  std::cout << "Block size: " << dev->GetWireOutValue(0x26) << std::endl;
+//  std::cout << "Burst len: " << dev->GetWireOutValue(0x27) << std::endl;
     dev->ActivateTriggerIn(TrigInSpiStart, 0);
 }
 
@@ -1042,7 +1041,13 @@ void Rhd2000EvalBoard::setDacManual(int value)
         return;
     }
 
-    dev->SetWireInValue(WireInDacManual, value);
+    dev->SetWireInValue(WireInDacManual, value << 15, 0xffff0000); // bits 16-31 are for DAC on this wire
+    dev->UpdateWireIns();
+}
+
+void Rhd2000EvalBoard::manualTrigger(int trigger, int triggerOn) 
+{
+    dev->SetWireInValue(WireInDacManual, (triggerOn ? 1: 0) << trigger, 1 << trigger);
     dev->UpdateWireIns();
 }
 
@@ -1133,7 +1138,7 @@ void Rhd2000EvalBoard::selectDacDataStream(int dacChannel, int stream)
         return;
     }
 
-    if (stream < 0 || stream > MAX_NUM_DATA_STREAMS +1) {
+    if (stream < 0 || stream > MAX_NUM_DATA_STREAMS+1) {
         std::cerr << "Error in Rhd2000EvalBoard::selectDacDataStream: stream out of range." << std::endl;
         return;
     }
@@ -1406,14 +1411,14 @@ void Rhd2000EvalBoard::flush()
     {
         dev->SetWireInValue(WireInResetRun, 1 << 16, 1 << 16); //Override pipeout block throttle
         dev->UpdateWireIns();
-        //std::cout << "Pre-Flush: " << numWordsInFifo() << std::endl;
+        //cout << "Pre-Flush: " << numWordsInFifo() << std::endl;
         while (numWordsInFifo() >= USB_BUFFER_SIZE / 2) {
             dev->ReadFromBlockPipeOut(PipeOutData, USB3_BLOCK_SIZE, USB_BUFFER_SIZE, usbBuffer);
-        //  std::cout << "Flush phase A: " << numWordsInFifo() << std::endl;
+        //  cout << "Flush phase A: " << numWordsInFifo() << std::endl;
         }
         while (numWordsInFifo() > 0) {
-            dev->ReadFromBlockPipeOut(PipeOutData, USB3_BLOCK_SIZE, USB3_BLOCK_SIZE * std::max(2 * numWordsInFifo() / USB3_BLOCK_SIZE, (unsigned int)1), usbBuffer);
-        //  std::cout << "Flush phase B: " << numWordsInFifo() << std::endl;
+            dev->ReadFromBlockPipeOut(PipeOutData, USB3_BLOCK_SIZE, USB3_BLOCK_SIZE *std::max(2 * numWordsInFifo() / USB3_BLOCK_SIZE, (unsigned int)1), usbBuffer);
+        //  cout << "Flush phase B: " << numWordsInFifo() << std::endl;
         //  printFIFOmetrics();
         }
         dev->SetWireInValue(WireInResetRun, 0, 1 << 16);
@@ -1447,13 +1452,13 @@ bool Rhd2000EvalBoard::readDataBlock(Rhd2000DataBlock *dataBlock, int nSamples)
 
     if (usb3)
     {
-        //std::std::cout << "usb3 read : " << numBytesToRead << " in " << USB3_BLOCK_SIZE << " blocks" << std::std::endl;
+        //std::cout << "usb3 read : " << numBytesToRead << " in " << USB3_BLOCK_SIZE << " blocks" << std::endl;
         res = dev->ReadFromBlockPipeOut(PipeOutData, USB3_BLOCK_SIZE, numBytesToRead, usbBuffer);
 
     }
     else
     {
-        //std::std::cout << "usb2 read: " << numBytesToRead << std::std::endl;
+        //std::cout << "usb2 read: " << numBytesToRead << std::endl;
         res = dev->ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer);
     }
     if (res == ok_Timeout)
@@ -1481,13 +1486,13 @@ bool Rhd2000EvalBoard::readRawDataBlock(unsigned char** bufferPtr, int nSamples)
 
     if (usb3)
     {
-        //std::std::cout << "usb3 read : " << numBytesToRead << " in " << USB3_BLOCK_SIZE << " blocks" << std::std::endl;
+        //std::cout << "usb3 read : " << numBytesToRead << " in " << USB3_BLOCK_SIZE << " blocks" << std::endl;
         res = dev->ReadFromBlockPipeOut(PipeOutData, USB3_BLOCK_SIZE, numBytesToRead, usbBuffer);
 
     }
     else
     {
-        //std::std::cout << "usb2 read: " << numBytesToRead << std::std::endl;
+        //std::cout << "usb2 read: " << numBytesToRead << std::endl;
         res = dev->ReadFromPipeOut(PipeOutData, numBytesToRead, usbBuffer);
     }
     if (res == ok_Timeout)
@@ -1702,4 +1707,61 @@ void Rhd2000EvalBoard::printFIFOmetrics()
 {
     dev->UpdateWireOuts();
     std::cout << "In FIFO: " << dev->GetWireOutValue(0x28) << " DDR: " << dev->GetWireOutValue(0x2a) << " Out FIFO: " << dev->GetWireOutValue(0x29) << std::endl;
+}
+
+void Rhd2000EvalBoard::programStimReg(int stream, int channel, int reg, int value) 
+{
+    dev->SetWireInValue(WireInStimRegAddr, (stream << 8) + (channel << 4) + reg);
+    dev->SetWireInValue(WireInStimRegWord, value);
+    dev->UpdateWireIns();
+
+    dev->ActivateTriggerIn(TrigInRamAddrReset, 1);
+}
+
+void Rhd2000EvalBoard::updateDigitalOutput(DigitalOutput digital)
+{
+    int stream = 16;
+
+    double timestep_us = 1.0e6 / getSampleRate();
+
+    int value = (digital.triggerEnabled ? (1 << 7) : 0) + 
+                (digital.triggerOnLow ? (1 << 6) : 0) + 
+                (digital.edgeTriggered ? (1 << 5) : 0) + digital.triggerSource;
+    
+    //Trigger Parameters
+    programStimReg(stream, digital.channel,0,value);
+
+    // Number of Pulses
+    value = (digital.negStimFirst ? (1 << 10) : 0) + (digital.shapeInt << 8) + (digital.numPulses - 1);
+    programStimReg(stream, digital.channel, 1, value);
+
+    int postTriggerDelay = std::round(digital.postTriggerDelay / timestep_us + 0.5);
+    int firstPhaseDuration = std::round(digital.firstPhaseDuration / timestep_us + 0.5);
+    int refractoryPeriod = std::round(digital.refractoryPeriod / timestep_us + 0.5);
+    int pulseTrainPeriod = std::round(digital.pulseTrainPeriod / timestep_us + 0.5);
+
+    int eventStartStim = postTriggerDelay;
+    int eventEndStim = eventStartStim + firstPhaseDuration;
+    int eventEnd = eventEndStim + refractoryPeriod;
+
+    int eventRepeatStim = 0;
+
+    if (digital.pulseOrTrain == 1)
+    {
+        eventRepeatStim = eventStartStim + pulseTrainPeriod;
+    } else {
+        eventRepeatStim = 4294967295;
+    }
+
+    //EventStartStim (post Trigger Delay) #These times are in units of clock ticks
+    programStimReg(stream, digital.channel, 4, eventStartStim);
+
+    //eventEndStim (post Trigger Delay + Phase duration)
+    programStimReg(stream, digital.channel, 7, eventEndStim);
+
+    //eventRepeatStim
+    programStimReg(stream, digital.channel, 8, eventRepeatStim);
+
+    //event End
+    programStimReg(stream, digital.channel, 13, eventEnd);
 }
