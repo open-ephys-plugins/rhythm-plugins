@@ -40,6 +40,7 @@ inline double round(double x)
 #endif
 
 #define HS_WIDTH 70
+#define HS_PANEL_WIDTH 80
 
 DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
                              DeviceThread* board_)
@@ -69,7 +70,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add rescan button
     rescanButton = new UtilityButton("RESCAN", Font("Small Text", 13, Font::plain));
     rescanButton->setRadius(3.0f);
-    rescanButton->setBounds(6, 108, 65, 18);
+    rescanButton->setBounds(6 + HS_WIDTH, 108, 65, 18);
     rescanButton->addListener(this);
     rescanButton->setTooltip("Check for connected headstages");
     addAndMakeVisible(rescanButton);
@@ -77,17 +78,17 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add sample rate selection
     sampleRateInterface = new SampleRateInterface(board, this);
     addAndMakeVisible(sampleRateInterface);
-    sampleRateInterface->setBounds(80, 20, 80, 50);
+    sampleRateInterface->setBounds(80 + HS_PANEL_WIDTH, 20, 80, 50);
 
     // add Bandwidth selection
     bandwidthInterface = new BandwidthInterface(board, this);
     addAndMakeVisible(bandwidthInterface);
-    bandwidthInterface->setBounds(80, 55, 80, 50);
+    bandwidthInterface->setBounds(80 + HS_PANEL_WIDTH, 55, 80, 50);
 
     // add AUX channel enable/disable button
     auxButton = new UtilityButton("AUX", Font("Small Text", 13, Font::plain));
     auxButton->setRadius(3.0f);
-    auxButton->setBounds(80, 108, 32, 18);
+    auxButton->setBounds(80 + HS_PANEL_WIDTH, 108, 32, 18);
     auxButton->addListener(this);
     auxButton->setClickingTogglesState(true);
     auxButton->setTooltip("Toggle AUX channels (3 per headstage)");
@@ -96,7 +97,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add ADC channel enable/disable button
     adcButton = new UtilityButton("ADC", Font("Small Text", 13, Font::plain));
     adcButton->setRadius(3.0f);
-    adcButton->setBounds(80+32+1, 108, 32, 18);
+    adcButton->setBounds(80+32+1 + HS_PANEL_WIDTH, 108, 32, 18);
     adcButton->addListener(this);
     adcButton->setClickingTogglesState(true);
     adcButton->setTooltip("Toggle 8 external HDMI ADC channels");
@@ -104,7 +105,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
 
     // add audio output config interface
     audioLabel = new Label("audio label", "Audio out");
-    audioLabel->setBounds(170, 20, 75, 15);
+    audioLabel->setBounds(170 + HS_PANEL_WIDTH, 20, 75, 15);
     audioLabel->setFont(Font("Small Text", 10, Font::plain));
     audioLabel->setColour(Label::textColourId, Colours::darkgrey);
     addAndMakeVisible(audioLabel);
@@ -114,7 +115,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
         ElectrodeButton* button = new ElectrodeButton(-1);
         electrodeButtons.add(button);
 
-        button->setBounds(174+i*30, 35, 30, 15);
+        button->setBounds(174+i*30 + HS_PANEL_WIDTH, 35, 30, 15);
         button->setChannelNum(-1);
         button->setClickingTogglesState (false);
         button->setToggleState(false, dontSendNotification);
@@ -135,16 +136,16 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add HW audio parameter selection
     audioInterface = new AudioInterface(board, this);
     addAndMakeVisible(audioInterface);
-    audioInterface->setBounds(174, 55, 70, 50);
+    audioInterface->setBounds(174 + HS_PANEL_WIDTH, 55, 70, 50);
 
     clockInterface = new ClockDivideInterface(board, this);
     addAndMakeVisible(clockInterface);
-    clockInterface->setBounds(174, 80, 70, 50);
+    clockInterface->setBounds(174 + HS_PANEL_WIDTH, 80, 70, 50);
 
     // add DSP Offset Button
     dspoffsetButton = new UtilityButton("DSP:", Font("Small Text", 13, Font::plain));
     dspoffsetButton->setRadius(3.0f); // sets the radius of the button's corners
-    dspoffsetButton->setBounds(174, 108, 32, 18); // sets the x position, y position, width, and height of the button
+    dspoffsetButton->setBounds(174 + HS_PANEL_WIDTH, 108, 32, 18); // sets the x position, y position, width, and height of the button
     dspoffsetButton->addListener(this);
     dspoffsetButton->setClickingTogglesState(true); // makes the button toggle its state when clicked
     dspoffsetButton->setTooltip("Toggle DSP offset removal");
@@ -154,11 +155,11 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add DSP Frequency Selection field
     dspInterface = new DSPInterface(board, this);
     addAndMakeVisible(dspInterface);
-    dspInterface->setBounds(174+32, 108, 40, 50);
+    dspInterface->setBounds(174+32 + HS_PANEL_WIDTH, 108, 40, 50);
 
     dacTTLButton = new UtilityButton("DAC TTL", Font("Small Text", 13, Font::plain));
     dacTTLButton->setRadius(3.0f);
-    dacTTLButton->setBounds(260, 25, 60, 18);
+    dacTTLButton->setBounds(260 + HS_PANEL_WIDTH, 25, 60, 18);
     dacTTLButton->addListener(this);
     dacTTLButton->setClickingTogglesState(true);
     dacTTLButton->setTooltip("Toggle DAC Threshold TTL Output");
@@ -166,12 +167,12 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
 
     dacHPFlabel = new Label("DAC HPF", "DAC HPF");
     dacHPFlabel->setFont(Font("Small Text", 10, Font::plain));
-    dacHPFlabel->setBounds(255, 40, 60, 20);
+    dacHPFlabel->setBounds(255 + HS_PANEL_WIDTH, 40, 60, 20);
     dacHPFlabel->setColour(Label::textColourId, Colours::darkgrey);
     addAndMakeVisible(dacHPFlabel);
 
     dacHPFcombo = new ComboBox("dacHPFCombo");
-    dacHPFcombo->setBounds(260, 55, 60, 18);
+    dacHPFcombo->setBounds(260 + HS_PANEL_WIDTH, 55, 60, 18);
     dacHPFcombo->addListener(this);
     dacHPFcombo->addItem("OFF", 1);
     int HPFvalues[10] = {50, 100, 200, 300, 400, 500, 600, 700, 800, 900};
@@ -184,12 +185,12 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
 
     ttlSettleLabel = new Label("TTL Settle", "TTL Settle");
     ttlSettleLabel->setFont(Font("Small Text", 10, Font::plain));
-    ttlSettleLabel->setBounds(255, 70, 70, 20);
+    ttlSettleLabel->setBounds(255 + HS_PANEL_WIDTH, 70, 70, 20);
     ttlSettleLabel->setColour(Label::textColourId, Colours::darkgrey);
     addAndMakeVisible(ttlSettleLabel);
 
     ttlSettleCombo = new ComboBox("FastSettleComboBox");
-    ttlSettleCombo->setBounds(260, 85, 60, 18);
+    ttlSettleCombo->setBounds(260 + HS_PANEL_WIDTH, 85, 60, 18);
     ttlSettleCombo->addListener(this);
     ttlSettleCombo->addItem("-",1);
     for (int k=0; k<8; k++)
@@ -201,7 +202,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
 
     ledButton = new UtilityButton("LED", Font("Small Text", 13, Font::plain));
     ledButton->setRadius(3.0f);
-    ledButton->setBounds(288, 108, 32, 18);
+    ledButton->setBounds(288 + HS_PANEL_WIDTH, 108, 32, 18);
     ledButton->addListener(this);
     ledButton->setClickingTogglesState(true);
     ledButton->setTooltip("Toggle board LEDs");
