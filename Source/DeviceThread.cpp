@@ -868,6 +868,9 @@ void DeviceThread::updateSettings(OwnedArray<ContinuousChannel>* continuousChann
             for (int ch = 0; ch < headstage->getNumChannels(); ch++)
             {
 
+                if (headstage->getHalfChannels() && ch >= 16)
+                    continue;
+
                 ContinuousChannel::Settings channelSettings{
                     ContinuousChannel::ELECTRODE,
                     headstage->getChannelName(ch),
@@ -889,8 +892,18 @@ void DeviceThread::updateSettings(OwnedArray<ContinuousChannel>* continuousChann
                 }
 
             }
+        }
+    }
 
-            if (settings.acquireAux)
+    if (settings.acquireAux)
+    {
+        int hsIndex = -1;
+        
+        for (auto headstage : headstages)
+        {
+            hsIndex++;
+
+            if (headstage->isConnected())
             {
                 for (int ch = 0; ch < 3; ch++)
                 {
@@ -1743,10 +1756,101 @@ bool DeviceThread::updateBuffer()
     {
         int channel = -1;
 
-        if (!Rhd2000DataBlockUsb3::checkUsbHeader(bufferPtr, index))
-        {
-            LOGE( "Error in Rhd2000EvalBoardUsb3::readDataBlock: Incorrect header." );
-            break;
+            if (!Rhd2000DataBlock::checkUsbHeader(bufferPtr, index))
+            {
+                LOGE( "Error in Rhd2000EvalBoard::readDataBlock: Incorrect header." );
+                break;
+            }
+
+            index += 8; // magic number header width (bytes)
+            int64 timestamp = Rhd2000DataBlock::convertUsbTimeStamp(bufferPtr, index);
+            index += 4; // timestamp width
+            auxIndex = index; // aux chans start at this offset
+            index += 6 * numStreams; // width of the 3 aux chans
+
+            for (int dataStream = 0; dataStream < numStreams; dataStream++)
+            {                
+                
+                int nChans = numChannelsPerDataStream[dataStream];
+
+                chanIndex = index + 2*dataStream;
+                
+                if ((chipId[dataStream] == CHIP_ID_RHD2132) && (nChans == 16)) //RHD2132 16ch. headstage
+                {
+                    chanIndex += 2 * RHD2132_16CH_OFFSET * numStreams;
+                }
+                
+                for (int chan = 0; chan < nChans; chan++)
+                {
+                    channel++;
+                    thisSample[channel] = float(*(uint16*)(bufferPtr + chanIndex) - 32768) * 0.195f;
+                    chanIndex += 2 * numStreams; // single chan width (2 bytes)
+                }
+                
+            }
+            index += 64 * numStreams; // neural data width
+            auxIndex += 2 * numStreams; // skip AuxCmd1 slots (see updateRegisters())
+            // copy the 3 aux channels
+            if (settings.acquireAux)
+            {
+                for (int dataStream = 0; dataStream < numStreams; dataStream++)
+                {
+                    if (chipId[dataStream] != CHIP_ID_RHD2164_B)
+                    {
+                        int auxNum = (samp+3) % 4;
+                        if (auxNum < 3)
+                        {
+                            auxSamples[dataStream][auxNum] = float(*(uint16*)(bufferPtr + auxIndex) - 32768)*0.0000374;
+                        }
+                        for (int chan = 0; chan < 3; chan++)
+                        {
+                            channel++;
+                            if (auxNum == 3)
+                            {
+                                auxBuffer[channel] = auxSamples[dataStream][chan];
+                            }
+                            thisSample[channel] = auxBuffer[channel];
+                        }
+                    }
+                    auxIndex += 2; // single chan width (2 bytes)
+                }
+            }
+            index += 2 * numStreams; // skip over filler word at the end of each data stream
+            // copy the 8 ADC channels
+            if (settings.acquireAdc)
+            {
+                for (int adcChan = 0; adcChan < 8; ++adcChan)
+                {
+
+                    channel++;
+                    // ADC waveform units = volts
+
+                    if (boardType == ACQUISITION_BOARD)
+                    {
+                        thisSample[channel] = adcRangeSettings[adcChan] == 0 ?
+                            0.00015258789 * float(*(uint16*)(bufferPtr + index)) - 5 - 0.4096 : // account for +/-5V input range and DC offset
+                            0.00030517578 * float(*(uint16*)(bufferPtr + index)); // shouldn't this be half the value, not 2x?
+                    }
+                    else if (boardType == INTAN_RHD_USB) {
+                        thisSample[channel] = 0.000050354 * float(*(uint16*)(bufferPtr + index));
+                    }
+                    index += 2; // single chan width (2 bytes)
+                }
+            }
+            else
+            {
+                index += 16; // skip ADC chans (8 * 2 bytes)
+            }
+
+            uint64 ttlEventWord = *(uint64*)(bufferPtr + index) & 65535;
+
+            index += 4;
+
+            sourceBuffers[0]->addToBuffer(thisSample,
+                                          &timestamp,
+                                          &ts,
+                                          &ttlEventWord,
+                                          1);
         }
 
         index += 8; // magic number header width (bytes)
