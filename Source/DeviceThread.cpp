@@ -33,6 +33,8 @@
 
 #include "USBThread.h"
 
+#include <ostream>
+
 using namespace RhythmNode;
 
 BoardType DeviceThread::boardType = ACQUISITION_BOARD; // initialize static member
@@ -592,13 +594,13 @@ void DeviceThread::scanPorts()
         new Rhd2000DataBlockUsb3(evalBoard->getNumEnabledDataStreams());
 
     Array<int> sumGoodDelays;
-    sumGoodDelays.insertMultiple(0, 0, 8);
+    sumGoodDelays.insertMultiple(0, 0, MAX_NUM_HEADSTAGES);
 
     Array<int> indexFirstGoodDelay;
-    indexFirstGoodDelay.insertMultiple(0, -1, 8);
+    indexFirstGoodDelay.insertMultiple(0, -1, MAX_NUM_HEADSTAGES);
 
     Array<int> indexSecondGoodDelay;
-    indexSecondGoodDelay.insertMultiple(0, -1, 8);
+    indexSecondGoodDelay.insertMultiple(0, -1, MAX_NUM_HEADSTAGES);
 
     // Run SPI command sequence at all 16 possible FPGA MISO delay settings
     // to find optimum delay for each SPI interface cable.
@@ -1815,7 +1817,9 @@ bool DeviceThread::updateBuffer()
                 auxIndex += 2; // single chan width (2 bytes)
             }
         }
-        index += 2 * numStreams; // skip over filler word at the end of each data stream
+        //Remaining Frame is 8 * 2 bytes of ADC channels, 4 bytes of TTL events
+        //Frame must be a multiple of 4 16-bit words, uses filler words at end of neural data to align
+        index += ((index+20) % 8) == 0 ? 0 : (8 - ((index+20) % 8)); // skip over filler word at the end of neural data
         // copy the 8 ADC channels
         if (settings.acquireAdc)
         {
