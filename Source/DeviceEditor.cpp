@@ -735,6 +735,18 @@ HeadstageOptionsInterface::HeadstageOptionsInterface(DeviceThread* board_,
         case 3:
             name = "D";
             break;
+        case 4:
+            name = "E";
+            break;
+        case 5:
+            name = "F";
+            break;
+        case 6:
+            name = "G";
+            break;
+        case 7:
+            name = "H";
+            break;
         default:
             name = "X";
     }
