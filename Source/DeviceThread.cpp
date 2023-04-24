@@ -33,8 +33,6 @@
 
 #include "USBThread.h"
 
-#include <ostream>
-
 using namespace RhythmNode;
 
 BoardType DeviceThread::boardType = ACQUISITION_BOARD; // initialize static member
