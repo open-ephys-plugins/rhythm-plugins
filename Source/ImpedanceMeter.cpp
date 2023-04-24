@@ -57,7 +57,7 @@ ImpedanceMeter::ImpedanceMeter(DeviceThread* board_) :
 {
     // to perform electrode impedance measurements at very low frequencies.
     const int maxNumBlocks = 120;
-    int numStreams = 8;
+    int numStreams = 32;
 
     allocateDoubleArray3D(amplifierPreFilter, numStreams, 32, SAMPLES_PER_DATA_BLOCK * maxNumBlocks);
 }
@@ -572,7 +572,7 @@ void ImpedanceMeter::runImpedanceMeasurement(Impedances& impedances)
                 empiricalResistanceCorrection(impedanceMagnitude, impedancePhase,
                     board->settings.boardSampleRate);
 
-                impedances.streams.add(enabledStreams[stream]);
+                impedances.streams.add(stream);
                 impedances.channels.add(channel + chOffset);
                 impedances.magnitudes.add(impedanceMagnitude);
                 impedances.phases.add(impedancePhase);
