@@ -177,7 +177,7 @@ void DeviceThread::handleBroadcastMessage(String msg)
 
     //std::cout << "Received " << msg << std::endl;
 
-    if (parts[0].equalsIgnoreCase("ACQBOARD"))
+    if (parts[0].equalsIgnoreCase("RHDCONTROL"))
     {
         if (parts.size() > 1)
         {

@@ -102,7 +102,7 @@ namespace AcqBoardOutputNamespace {
 
                 if (event->getState())
                 {
-                    String msg = "ACQBOARD TRIGGER "
+                    String msg = "RHDCONTROL TRIGGER "
                         + (*stream)["ttl_out"].toString()
                         + " "
                         + (*stream)["event_duration"].toString();
