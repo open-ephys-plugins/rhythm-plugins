@@ -1,32 +1,20 @@
-# Rhythm Plugins
+# Rhythm Plugins - RHD Recording Controller
 
 ![acquisition-board-plugin-screenshot](Resources/acquisition-board-plugin.png)
 
-A set of plugins for streaming data from devices running Intan's Rhythm firmware. 
-
-These devices are currently supported:
-
-- [Open Ephys Acquisition Board](https://open-ephys.org/acq-board)
-- [Intan RHD USB Interface Board](https://intantech.com/RHD_USB_interface_board.html)
-
-Plugins for the following devices are coming soon:
-
-- [Intan 512 and 1024 Recording Controllers](https://intantech.com/RHD_controllers.html)
-- [Intan RHS Recording/Stimulation Controller](https://intantech.com/stim_record_controller.html)
+Plugin for streaming data from the [Intan 512 and 1024 Recording Controllers](https://intantech.com/RHD_controllers.html)
 
 ## Installation
 
-These plugins can be added via the Open Ephys GUI's built-in Plugin Installer. Press **ctrl-P** or **⌘P** to open the Plugin Installer, browse to "Rhythm Plugins," and click the "Install" button. The Acquisition Board, Intan RHD USB, and Acq. Board Output plugins should now be available to use.
+This plugin can be added via the Open Ephys GUI's built-in Plugin Installer. Press **ctrl-P** or **⌘P** to open the Plugin Installer, browse to "RHD Recording Controller," and click the "Install" button. The RHD Recording Controller and Rec Controller Output plugins should now be available to use.
 
 ## Usage
 
-Instructions for using the Rhythm Plugins are available [here](https://open-ephys.github.io/gui-docs/User-Manual/Plugins/Rhythm-Plugins.html).
+Instructions for using the Intan Recording Controller plugin are available [here](https://open-ephys.github.io/gui-docs/User-Manual/Plugins/Rhythm-Plugins.html).
 
 ## Building from source
 
 First, follow the instructions on [this page](https://open-ephys.github.io/gui-docs/Developer-Guide/Compiling-the-GUI.html) to build the Open Ephys GUI.
-
-**Important:** This plugin is intended for use with the latest version of the GUI (0.6.0 and higher). The GUI should be compiled from the [`main`](https://github.com/open-ephys/plugin-gui/tree/main) branch, rather than the former `master` branch.
 
 Then, clone this repository into a directory at the same level as the `plugin-GUI`, e.g.:
  
@@ -42,6 +30,8 @@ Code
 │       ├── Source
 │       └── ...
 ```
+
+Next, switch to the `recording-controller` branch.
 
 ### Windows
 
@@ -92,4 +82,4 @@ Running the `ALL_BUILD` scheme will compile the plugin; running the `INSTALL` sc
 
 ## Attribution
 
-This plugin has been collaboratively developed by Josh Siegle and Aarón Cuevas López. It is currently being maintained at the Allen Institute.
+This plugin has been collaboratively developed by Josh Siegle, Aarón Cuevas López, and Allen Munk. It is currently being maintained at the Allen Institute.
