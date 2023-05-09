@@ -43,7 +43,7 @@ extern "C" EXPORT void getLibInfo(Plugin::LibraryInfo* info)
 {
 	info->apiVersion = PLUGIN_API_VER;
 	info->name = "RHD Recording Controller";
-	info->libVersion = "0.2.5";
+	info->libVersion = "0.3.0";
 	info->numPlugins = NUM_PLUGINS;
 }
 
