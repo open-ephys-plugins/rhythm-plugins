@@ -1815,10 +1815,10 @@ bool DeviceThread::updateBuffer()
                 auxIndex += 2; // single chan width (2 bytes)
             }
         }
-        //Remaining Frame is 8 * 2 bytes of ADC channels, 4 bytes of TTL events
-        //Frame must be a multiple of 4 16-bit words, uses filler words at end of neural data to align
-        index += ((index+20) % 8) == 0 ? 0 : (8 - ((index+20) % 8)); // skip over filler word at the end of neural data
-        // copy the 8 ADC channels
+
+        //skip filler words
+        index += 2 * (numStreams % 4);
+        
         if (settings.acquireAdc)
         {
             for (int adcChan = 0; adcChan < 8; ++adcChan)
@@ -1826,22 +1826,14 @@ bool DeviceThread::updateBuffer()
 
                 channel++;
                 // ADC waveform units = volts
-
-                if (boardType == ACQUISITION_BOARD)
-                {
-                    thisSample[channel] = adcRangeSettings[adcChan] == 0 ?
-                        0.00015258789 * float(*(uint16*)(bufferPtr + index)) - 5 - 0.4096 : // account for +/-5V input range and DC offset
-                        0.00030517578 * float(*(uint16*)(bufferPtr + index)); // shouldn't this be half the value, not 2x?
-                }
-                else if (boardType == INTAN_RHD_USB) {
-                    thisSample[channel] = 0.000050354 * float(dataBlock->boardAdcData[adcChan][samp]);
-                }
-                index += 2; // single chan width (2 bytes)
+                thisSample[channel] =
+                    0.00015258789 * float(*(uint16*)(bufferPtr + index)) - 5 - 0.4096; // account for +/-5V input range and DC offset
+                index += 2;
             }
         }
         else
         {
-            index += 16; // skip ADC chans (8 * 2 bytes)
+            index += 16;
         }
 
         uint64 ttlEventWord = *(uint64*)(bufferPtr + index) & 65535;
