@@ -289,50 +289,17 @@ Array<int> DeviceThread::getDACchannels() const
 
 bool DeviceThread::openBoard(String pathToLibrary)
 {
-    int return_code = evalBoard->open();
+    okBoardType = evalBoard->open();
 
-    if (return_code == 1)
+    if (okBoardType != Rhd2000EvalBoardUsb3::OpalKellyBoardType::UNKNOWN)
     {
         deviceFound = true;
     }
-    else if (return_code == -1) // dynamic library not found
+    else  // board could not be opened
     {
         bool response = AlertWindow::showOkCancelBox(AlertWindow::NoIcon,
-                                                     "Opal Kelly library not found.",
-                                                     "The Opal Kelly library file was not found in the directory of the executable. "
-                                                     "Would you like to browse for it?",
-                                                     "Yes", "No", 0, 0);
-        if (response)
-        {
-            // browse for file
-            FileChooser fc("Select the library file...",
-                           File::getCurrentWorkingDirectory(),
-                           okLIB_EXTENSION,
-                           true);
-
-            if (fc.browseForFileToOpen())
-            {
-                File currentFile = fc.getResult();
-                libraryFilePath = currentFile.getFullPathName();
-                openBoard(libraryFilePath); // call recursively
-            }
-            else
-            {
-                //sendActionMessage("No configuration selected.");
-                deviceFound = false;
-            }
-
-        }
-        else
-        {
-            deviceFound = false;
-        }
-    }
-    else if (return_code == -2)   // board could not be opened
-    {
-        bool response = AlertWindow::showOkCancelBox(AlertWindow::NoIcon,
-                                                     "Acquisition board not found.",
-                                                     "An acquisition board could not be found. Please connect one now.",
+                                                     "Recording Controller not found.",
+                                                     "An RHD Recording Controller could not be found. Please connect one now.",
                                                      "OK", "Cancel", 0, 0);
 
         if (response)
@@ -359,9 +326,11 @@ bool DeviceThread::uploadBitfile(String bitfilename)
     {
         LOGD("Couldn't upload bitfile from ", bitfilename);
 
+        File file = File(bitfilename);
+
         bool response = AlertWindow::showOkCancelBox(AlertWindow::NoIcon,
             "FPGA bitfile not found.",
-            "The intan_rec_controller.bit file was not found in the directory of the executable. Would you like to browse for it?",
+            file.getFileName().toStdString() + "file was not found in the directory of the executable. Would you like to browse for it ? ",
             "Yes", "No", 0, 0);
 
         if (response)
@@ -412,8 +381,10 @@ void DeviceThread::initializeBoard()
     bitfilename += "shared";
     bitfilename += File::getSeparatorString();
 
-    if (boardType == RHD_RECORDING_CONTROLLER)
+    if (okBoardType == Rhd2000EvalBoardUsb3::OpalKellyBoardType::XEM6310)
         bitfilename += "intan_rec_controller.bit";
+    else
+        bitfilename += "intan_rec_controller_7310.bit";
 
     if (!uploadBitfile(bitfilename))
     {

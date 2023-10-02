@@ -51,10 +51,18 @@ class Rhd2000EvalBoardUsb3
 {
 
 public:
+    
+    enum OpalKellyBoardType
+    {
+        XEM6310,
+        XEM7310,
+        UNKNOWN
+    };
+
     Rhd2000EvalBoardUsb3();
     ~Rhd2000EvalBoardUsb3();
 
-    int open();
+    OpalKellyBoardType open();
     bool uploadFpgaBitfile(std::string filename);
     void initialize();
 

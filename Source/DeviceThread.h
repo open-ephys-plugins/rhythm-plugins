@@ -341,6 +341,9 @@ namespace RhythmNode
 		/** Path to Opal Kelly library file*/
 		String libraryFilePath;
 
+		/** Opal Kelly board type*/
+		Rhd2000EvalBoardUsb3::OpalKellyBoardType okBoardType;
+
 		/** Open the connection to the acquisition board*/
 		bool openBoard(String pathToLibrary);
 

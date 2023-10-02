@@ -63,7 +63,7 @@ Rhd2000EvalBoardUsb3::~Rhd2000EvalBoardUsb3()
 
 // Find an Opal Kelly XEM6310-LX45 board attached to a USB port and open it.
 // Returns 1 if successful, -1 if FrontPanel cannot be loaded, and -2 if XEM6310 can't be found.
-int Rhd2000EvalBoardUsb3::open()
+Rhd2000EvalBoardUsb3::OpalKellyBoardType Rhd2000EvalBoardUsb3::open()
 {
     lock_guard<mutex> lockOk(okMutex);
     char dll_date[32], dll_time[32];
@@ -92,17 +92,28 @@ int Rhd2000EvalBoardUsb3::open()
     }
     cout << endl;
 
-    // Find first device in list of type XEM6310LX45.
-    for (i = 0; i < nDevices; ++i) {
-        if (dev->GetDeviceListModel(i) == OK_PRODUCT_XEM6310LX45) {
+    OpalKellyBoardType boardType = UNKNOWN;
+
+    // Find first device in list of type XEM6310LX45 or XEM7310A75.
+    for (i = 0; i < nDevices; ++i) 
+    {
+        if (dev->GetDeviceListModel(i) == OK_PRODUCT_XEM6310LX45) 
+        {
             serialNumber = dev->GetDeviceListSerial(i);
+            boardType = XEM6310;
             break;
         }
+        else if (dev->GetDeviceListModel(i) == OK_PRODUCT_XEM7310A75)
+        {
+			serialNumber = dev->GetDeviceListSerial(i);
+			boardType = XEM7310;
+			break;
+		}
     }
 
     if (serialNumber == "") {
         cerr << "No XEM6310-LX45 Opal Kelly board found." << endl;
-        return -2;
+        return boardType;
     }
 
     cout << "Attempting to connect to device '" << serialNumber.c_str() << "'\n";
@@ -113,7 +124,7 @@ int Rhd2000EvalBoardUsb3::open()
         delete dev;
         cerr << "Device could not be opened.  Is one connected?" << endl;
         cerr << "Error = " << result << endl;
-        return -2;
+        return UNKNOWN;
     }
 
     // Get some general information about the XEM.
@@ -122,7 +133,7 @@ int Rhd2000EvalBoardUsb3::open()
     cout << "Opal Kelly device serial number: " << dev->GetSerialNumber().c_str() << endl;
     cout << "Opal Kelly device ID string: " << dev->GetDeviceID().c_str() << endl << endl;
 
-    return 1;
+    return boardType;
 }
 
 // Uploads the configuration file (bitfile) to the FPGA.  Returns true if successful.
