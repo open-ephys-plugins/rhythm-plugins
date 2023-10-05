@@ -56,6 +56,7 @@ jobs:
         cp $build_dir/*.dll plugins
         mkdir shared
         cp Resources/okFrontPanel.dll shared
+        cp Resources/intan_rec_controller_7310.bit shared
         zipfile=${package}_${new_plugin_ver}.zip
         powershell Compress-Archive -Path "plugins" -DestinationPath ${zipfile}
         powershell Compress-Archive -U -Path "shared" -DestinationPath ${zipfile}
