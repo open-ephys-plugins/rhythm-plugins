@@ -44,14 +44,14 @@ ChannelComponent::ChannelComponent(ChannelList* cl,
     staticLabel = new Label("Channel","Channel");
     staticLabel->setFont(f);
     staticLabel->setEditable(false);
-    addAndMakeVisible(staticLabel);
+   // addAndMakeVisible(staticLabel);
 
     editName = new Label(name,name);
     editName->setFont(f);
     editName->setEditable(false);
     editName->setColour(Label::backgroundColourId,juce::Colours::lightgrey);
     editName->addListener(this);
-    addAndMakeVisible(editName);
+   // addAndMakeVisible(editName);
 
     if (type == ContinuousChannel::ELECTRODE)
     {

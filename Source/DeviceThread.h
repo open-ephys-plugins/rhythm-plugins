@@ -43,6 +43,7 @@
 #define REGISTER_59_MISO_A  53
 #define REGISTER_59_MISO_B  58
 #define RHD2132_16CH_OFFSET 8
+#define CHIP_ID_GALVANI 65535
 
 namespace RhythmNode
 {
@@ -171,6 +172,9 @@ namespace RhythmNode
 
 		void setSampleRate(int index, bool temporary = false);
 
+		//setting cable length
+		void setCableLength(int hsNum, float length);
+
 		double setUpperBandwidth(double upper); // set desired BW, returns actual BW
 		double setLowerBandwidth(double lower);
 
@@ -209,6 +213,11 @@ namespace RhythmNode
 		void setAdcRange(int adcChannel, short rangeType);
 
 		short getAdcRange(int adcChannel) const;
+
+		//galvani 3 stimulation functions
+		void uploadStimParameters(int amplitude, int period, int pulse_width, int edge_sel, int pulse_count);
+		void startStim();
+		void stopStim();
 
 		static DataThread* createDataThread(SourceNode* sn);
 
@@ -252,7 +261,7 @@ namespace RhythmNode
 
 		bool enableHeadstage(int hsNum, bool enabled, int nStr = 1, int strChans = 32);
 		void updateBoardStreams();
-		void setCableLength(int hsNum, float length);
+		
 
 		/** Rhythm API classes*/
 		ScopedPointer<Rhd2000EvalBoardUsb3> evalBoard;

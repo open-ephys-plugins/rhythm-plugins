@@ -42,8 +42,8 @@ using namespace Plugin;
 extern "C" EXPORT void getLibInfo(Plugin::LibraryInfo* info)
 {
 	info->apiVersion = PLUGIN_API_VER;
-	info->name = "RHD Recording Controller";
-	info->libVersion = "0.4.0";
+	info->name = "Galvani 3";
+	info->libVersion = "0.0.1";
 	info->numPlugins = NUM_PLUGINS;
 }
 
@@ -53,7 +53,7 @@ extern "C" EXPORT int getPluginInfo(int index, Plugin::PluginInfo* info)
 	{
 	case 0:
 		info->type = Plugin::Type::DATA_THREAD;
-		info->dataThread.name = "RHD Rec Controller";
+		info->dataThread.name = "Galvani3";
 		info->dataThread.creator = &createDataThread<RhythmNode::IntanRecordController>;
 		break;
 	case 1:

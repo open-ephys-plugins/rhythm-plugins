@@ -37,6 +37,7 @@ namespace RhythmNode
 	class ClockDivideInterface;
 	class DeviceThread;
 	class ChannelCanvas;
+	class CableLengthInterface;
 
 	struct ImpedanceData;
 
@@ -87,10 +88,14 @@ namespace RhythmNode
 		/** Called by PopupChannelSelector */
 		void channelStateChanged(Array<int> newChannels) override;
 
+	
+
 	private:
 
 		OwnedArray<HeadstageOptionsInterface> headstageOptionsInterfaces;
 		OwnedArray<ElectrodeButton> electrodeButtons;
+
+		ScopedPointer<CableLengthInterface> cableLengthInterface; //g3
 
 		ScopedPointer<SampleRateInterface> sampleRateInterface;
 		ScopedPointer<BandwidthInterface> bandwidthInterface;
@@ -315,6 +320,33 @@ namespace RhythmNode
 
 		ScopedPointer<Label> divideRatioSelection;
 		int actualDivideRatio;
+
+	};
+
+	class CableLengthInterface : public Component,
+		public ComboBox::Listener
+	{
+	public:
+		CableLengthInterface(DeviceThread*, DeviceEditor*);
+
+		~CableLengthInterface();
+
+		int getSelectedId();
+		void setSelectedId(int);
+
+		void paint(Graphics& g);
+		void comboBoxChanged(ComboBox* cb);
+
+	private:
+
+		int cableLength;
+		String name;
+
+		DeviceThread* board;
+		DeviceEditor* editor;
+
+		ScopedPointer<ComboBox> lengthSelection;
+		StringArray cableLengthOptions;
 
 	};
 

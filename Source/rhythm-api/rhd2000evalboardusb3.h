@@ -47,6 +47,7 @@ namespace OpalKellyLegacy
 }
 class Rhd2000DataBlockUsb3;
 
+
 class Rhd2000EvalBoardUsb3
 {
 
@@ -175,6 +176,14 @@ public:
 
 	bool getStreamEnabled(int stream) const;
 
+    //galvani3
+    void uploadWaveformParameters(int waveform_addr, int edge_select, int amplitude, int period, int pulse_width, int pulse_count);
+    void setStimChannel(int channel, int waveform_addr, int trig_mode, int trig_source, int enable);
+    void startStim();
+    void stopStim();
+  
+    
+
 private:
     OpalKellyLegacy::okCFrontPanel *dev;
     AmplifierSampleRate sampleRate;
@@ -235,6 +244,8 @@ private:
         WireOutBoardVersion = 0x3f,
 
         PipeOutData = 0xa0
+
+
     };
 
     std::string opalKellyModelName(int model) const;

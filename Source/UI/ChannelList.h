@@ -35,7 +35,8 @@ namespace RhythmNode
 
 	class ChannelList : public Component,
 					    public Button::Listener, 
-					    public ComboBox::Listener
+					    public ComboBox::Listener,
+						public TextEditor::Listener
 	{
 	public:
 
@@ -53,9 +54,15 @@ namespace RhythmNode
 		void buttonClicked(Button* btn);
 		void update();
 		void updateButtons();
-		int getMaxChannels() { return maxChannels; }
+		int  getMaxChannels() { return maxChannels; }
 		void comboBoxChanged(ComboBox* b);
 		void updateImpedance(Array<int> streams, Array<int> channels, Array<float> magnitude, Array<float> phase);
+
+		//galvani 3 waveform parameters
+		int amplitude, period, pulse_width, edge_sel, pulse_count;
+
+		//SHANK MAPPING IMAGE
+		Image shankMap;
 
 
 	private:
@@ -68,11 +75,29 @@ namespace RhythmNode
 		DeviceThread* board;
 		DeviceEditor* editor;
 
-		ScopedPointer<UtilityButton> impedanceButton;
-		ScopedPointer<UtilityButton> saveImpedanceButton;
+		//galvani 3 stimulation paramters
+		ScopedPointer<UtilityButton> uploadStimParamButton;
+		ScopedPointer<UtilityButton> startStimButton;
+		ScopedPointer<UtilityButton> stopStimButton;
+		ScopedPointer<ComboBox> globalEnable;
 
-		ScopedPointer<ComboBox> numberingScheme;
+		//galvani 3 Waveform selection
+		ScopedPointer<Label> waveformInputLabel;
+		ScopedPointer<TextEditor> amplitudeInput;
+		ScopedPointer<TextEditor> periodInput;
+		ScopedPointer<TextEditor> pulseWidthInput;
+		ScopedPointer<ComboBox>   edgeSelectBox;
+		ScopedPointer<TextEditor> pulseCountInput;
+
+	
+		//galvani 3 channel selection box.
+		ScopedPointer<ComboBox> channelEnabled;
 		ScopedPointer<Label> numberingSchemeLabel;
+
+		//galvani 3 channel list
+		std::unique_ptr<Component> ledButtonHolder;
+
+		ImageComponent imagecomponent;
 
 		OwnedArray<Label> staticLabels;
 		OwnedArray<ChannelComponent> channelComponents;

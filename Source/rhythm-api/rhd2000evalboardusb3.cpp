@@ -899,6 +899,8 @@ void Rhd2000EvalBoardUsb3::setCableLengthMeters(BoardPort port, double lengthInM
     timeDelay = (distance / cableVelocity) + xilinxLvdsOutputDelay + rhd2000Delay + xilinxLvdsInputDelay + misoSettleTime;
 
     delay = (int) floor(((timeDelay / tStep) + 1.0) + 0.5);
+    
+    cout << "DELAY SET TO : " << delay << "\n";
 
     if (delay < 1) delay = 1;   // delay of zero is too short (due to I/O delays), even for zero-length cables
 
@@ -1088,7 +1090,7 @@ void Rhd2000EvalBoardUsb3::enableDac(int dacChannel, bool enabled)
         dev->SetWireInValue(WireInDacSource4, (enabled ? 0x0800 : 0x0000), 0x0800);
         break;
     case 4:
-        dev->SetWireInValue(WireInDacSource5, (enabled ? 0x0800 : 0x0000), 0x0800);
+        //dev->SetWireInValue(WireInDacSource5, (enabled ? 0x0800 : 0x0000), 0x0800);
         break;
     case 5:
         dev->SetWireInValue(WireInDacSource6, (enabled ? 0x0800 : 0x0000), 0x0800);
@@ -1161,7 +1163,7 @@ void Rhd2000EvalBoardUsb3::selectDacDataStream(int dacChannel, int stream)
         dev->SetWireInValue(WireInDacSource4, stream << 5, 0x07e0);
         break;
     case 4:
-        dev->SetWireInValue(WireInDacSource5, stream << 5, 0x07e0);
+        //dev->SetWireInValue(WireInDacSource5, stream << 5, 0x07e0);
         break;
     case 5:
         dev->SetWireInValue(WireInDacSource6, stream << 5, 0x07e0);
@@ -1205,7 +1207,7 @@ void Rhd2000EvalBoardUsb3::selectDacDataChannel(int dacChannel, int dataChannel)
         dev->SetWireInValue(WireInDacSource4, dataChannel << 0, 0x001f);
         break;
     case 4:
-        dev->SetWireInValue(WireInDacSource5, dataChannel << 0, 0x001f);
+        //dev->SetWireInValue(WireInDacSource5, dataChannel << 0, 0x001f);
         break;
     case 5:
         dev->SetWireInValue(WireInDacSource6, dataChannel << 0, 0x001f);
@@ -2023,4 +2025,50 @@ void Rhd2000EvalBoardUsb3::enableDacReref(bool enabled)
 bool Rhd2000EvalBoardUsb3::getStreamEnabled(int stream) const
 {
 	return (dataStreamEnabled[stream] == 0 ? false : true);
+}
+
+//galvani3 stimulation functions
+void Rhd2000EvalBoardUsb3::startStim() {
+
+    lock_guard<mutex> lockOk(okMutex);
+    dev->ActivateTriggerIn(0x47, 0);
+
+}
+
+
+void Rhd2000EvalBoardUsb3::stopStim() {
+
+    lock_guard<mutex> lockOk(okMutex);
+    dev->ActivateTriggerIn(0x47, 1);
+
+}
+
+
+void Rhd2000EvalBoardUsb3::uploadWaveformParameters(int waveform_addr, int edge_select, int amplitude, int period, int pulse_width, int pulse_count) {
+
+    lock_guard<mutex> lockOk(okMutex);
+    // program waveform parameters
+    dev->SetWireInValue(0x0F, waveform_addr, 0x000F); // param_addr
+    dev->SetWireInValue(0x0F, (edge_select << 4) & 0x00F0, 0x00F0);   // edge select (0 = 0ms, 1 = 0.1ms, 2 = 0.5ms, 3 = 1ms, 4 = 2ms)
+    dev->SetWireInValue(0x10, amplitude, 0x00FF); // Amplitude
+    dev->SetWireInValue(0x11, period, 0xFFFFF); //Period
+    dev->SetWireInValue(0x12, pulse_width, 0xFFFFF); //Pulse Width
+    dev->SetWireInValue(0x13, pulse_count, 0xFFFF); //Pulse Count
+    dev->UpdateWireIns();
+    dev->ActivateTriggerIn(0x48, 1); // Trigger update of waveform parameters
+
+    //set channel output setStimChannel(channel, waveform_select, trig_mode, trig_source, enable)
+}
+
+void Rhd2000EvalBoardUsb3::setStimChannel(int channel, int waveform_addr, int trig_mode, int trig_source, int enabled) {
+   
+    lock_guard<mutex> lockOk(okMutex);
+
+    dev->SetWireInValue(0x1a, channel, 0x003F); // ch_addr
+    dev->SetWireInValue(0x1a, (waveform_addr << 6) & 0x03C0, 0x03C0); // wvfrm_sel
+    dev->SetWireInValue(0x1a, (trig_mode << 10), 0x0400); // trig_mode (one shot '0', or continuous '1')
+    dev->SetWireInValue(0x1a, (trig_source << 11), 0x0800); // trig_source (external '1', PC '0')
+    dev->SetWireInValue(0x1a, (enabled << 12), 0x1000); // enable
+    dev->UpdateWireIns();
+    dev->ActivateTriggerIn(0x48, 2); // Trigger update of channel properties
 }

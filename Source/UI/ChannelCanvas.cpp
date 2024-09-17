@@ -39,6 +39,8 @@ ChannelCanvas::ChannelCanvas(DeviceThread* board_,
 
     channelViewport = std::make_unique<Viewport>();
 
+
+
     channelList = std::make_unique<ChannelList>(board, editor);
 
     channelViewport->setViewedComponent(channelList.get(), false);

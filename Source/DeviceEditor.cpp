@@ -44,7 +44,7 @@ inline double round(double x)
 
 DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
                              DeviceThread* board_)
-    : VisualizerEditor(parentNode, "tabText", 340 + HS_WIDTH), board(board_)
+    : VisualizerEditor(parentNode, "tabText", 230 + HS_WIDTH), board(board_)
 {
     canvas = nullptr;
 
@@ -53,11 +53,11 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     else if (board->boardType == INTAN_RHD_USB)
         tabText = "Intan USB";
     else if (board->boardType == RHD_RECORDING_CONTROLLER)
-        tabText = "RHD Controller";
+        tabText = "Galvani 3 Stimulation";
 
     measureWhenRecording = false;
     saveImpedances = false;
-
+    
     // add headstage-specific controls (currently just a toggle button)
     for (int i = 0; i < 8; i++)
     {
@@ -67,13 +67,19 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
         hsOptions->setBounds(3 + (i / 4) * HS_WIDTH, 28 + (i % 4) * 20, 70, 18);
     }
 
-    // add rescan button
+
+    //rescan button
     rescanButton = new UtilityButton("RESCAN", Font("Small Text", 13, Font::plain));
     rescanButton->setRadius(3.0f);
     rescanButton->setBounds(6 + HS_WIDTH, 108, 65, 18);
     rescanButton->addListener(this);
     rescanButton->setTooltip("Check for connected headstages");
-    addAndMakeVisible(rescanButton);
+    //addAndMakeVisible(rescanButton);
+    
+    // add cable length selection (g3)
+    cableLengthInterface = new CableLengthInterface(board, this);
+    addAndMakeVisible(cableLengthInterface);
+    cableLengthInterface->setBounds(80 + HS_PANEL_WIDTH, 50, 100, 50);
 
     // add sample rate selection
     sampleRateInterface = new SampleRateInterface(board, this);
@@ -83,7 +89,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     // add Bandwidth selection
     bandwidthInterface = new BandwidthInterface(board, this);
     addAndMakeVisible(bandwidthInterface);
-    bandwidthInterface->setBounds(80 + HS_PANEL_WIDTH, 55, 80, 50);
+    //bandwidthInterface->setBounds(80 + HS_PANEL_WIDTH, 55, 80, 50);
 
     // add AUX channel enable/disable button
     auxButton = new UtilityButton("AUX", Font("Small Text", 13, Font::plain));
@@ -92,7 +98,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     auxButton->addListener(this);
     auxButton->setClickingTogglesState(true);
     auxButton->setTooltip("Toggle AUX channels (3 per headstage)");
-    addAndMakeVisible(auxButton);
+    //addAndMakeVisible(auxButton);
 
     // add ADC channel enable/disable button
     adcButton = new UtilityButton("ADC", Font("Small Text", 13, Font::plain));
@@ -101,14 +107,14 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     adcButton->addListener(this);
     adcButton->setClickingTogglesState(true);
     adcButton->setTooltip("Toggle 8 external HDMI ADC channels");
-    addAndMakeVisible(adcButton);
+   // addAndMakeVisible(adcButton);
 
     // add audio output config interface
     audioLabel = new Label("audio label", "Audio out");
     audioLabel->setBounds(170 + HS_PANEL_WIDTH, 20, 75, 15);
     audioLabel->setFont(Font("Small Text", 10, Font::plain));
     audioLabel->setColour(Label::textColourId, Colours::darkgrey);
-    addAndMakeVisible(audioLabel);
+    //addAndMakeVisible(audioLabel);
 
     for (int i = 0; i < 2; i++)
     {
@@ -120,7 +126,7 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
         button->setClickingTogglesState (false);
         button->setToggleState(false, dontSendNotification);
 
-        addAndMakeVisible(button);
+      //  addAndMakeVisible(button);
         button->addListener(this);
 
         if (i == 0)
@@ -135,11 +141,11 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
 
     // add HW audio parameter selection
     audioInterface = new AudioInterface(board, this);
-    addAndMakeVisible(audioInterface);
+    //addAndMakeVisible(audioInterface);
     audioInterface->setBounds(174 + HS_PANEL_WIDTH, 55, 70, 50);
 
     clockInterface = new ClockDivideInterface(board, this);
-    addAndMakeVisible(clockInterface);
+    //addAndMakeVisible(clockInterface);
     clockInterface->setBounds(174 + HS_PANEL_WIDTH, 80, 70, 50);
 
     // add DSP Offset Button
@@ -149,12 +155,12 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     dspoffsetButton->addListener(this);
     dspoffsetButton->setClickingTogglesState(true); // makes the button toggle its state when clicked
     dspoffsetButton->setTooltip("Toggle DSP offset removal");
-    addAndMakeVisible(dspoffsetButton); // makes the button a child component of the editor and makes it visible
+    //addAndMakeVisible(dspoffsetButton); // makes the button a child component of the editor and makes it visible
     dspoffsetButton->setToggleState(true, dontSendNotification);
 
     // add DSP Frequency Selection field
     dspInterface = new DSPInterface(board, this);
-    addAndMakeVisible(dspInterface);
+   // addAndMakeVisible(dspInterface);
     dspInterface->setBounds(174+32 + HS_PANEL_WIDTH, 108, 40, 50);
 
     dacTTLButton = new UtilityButton("DAC TTL", Font("Small Text", 13, Font::plain));
@@ -163,13 +169,13 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
     dacTTLButton->addListener(this);
     dacTTLButton->setClickingTogglesState(true);
     dacTTLButton->setTooltip("Toggle DAC Threshold TTL Output");
-    addAndMakeVisible(dacTTLButton);
+   // addAndMakeVisible(dacTTLButton);
 
     dacHPFlabel = new Label("DAC HPF", "DAC HPF");
     dacHPFlabel->setFont(Font("Small Text", 10, Font::plain));
     dacHPFlabel->setBounds(255 + HS_PANEL_WIDTH, 40, 60, 20);
     dacHPFlabel->setColour(Label::textColourId, Colours::darkgrey);
-    addAndMakeVisible(dacHPFlabel);
+   // addAndMakeVisible(dacHPFlabel);
 
     dacHPFcombo = new ComboBox("dacHPFCombo");
     dacHPFcombo->setBounds(260 + HS_PANEL_WIDTH, 55, 60, 18);
@@ -181,14 +187,17 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
         dacHPFcombo->addItem(String(HPFvalues[k])+" Hz", 2+k);
     }
     dacHPFcombo->setSelectedId(1, sendNotification);
-    addAndMakeVisible(dacHPFcombo);
+    //addAndMakeVisible(dacHPFcombo);
 
+    
     ttlSettleLabel = new Label("TTL Settle", "TTL Settle");
     ttlSettleLabel->setFont(Font("Small Text", 10, Font::plain));
     ttlSettleLabel->setBounds(255 + HS_PANEL_WIDTH, 70, 70, 20);
     ttlSettleLabel->setColour(Label::textColourId, Colours::darkgrey);
-    addAndMakeVisible(ttlSettleLabel);
+    //addAndMakeVisible(ttlSettleLabel);
+    
 
+    
     ttlSettleCombo = new ComboBox("FastSettleComboBox");
     ttlSettleCombo->setBounds(260 + HS_PANEL_WIDTH, 85, 60, 18);
     ttlSettleCombo->addListener(this);
@@ -198,7 +207,8 @@ DeviceEditor::DeviceEditor(GenericProcessor* parentNode,
         ttlSettleCombo->addItem("TTL"+String(1+k), 2+k);
     }
     ttlSettleCombo->setSelectedId(1, sendNotification);
-    addAndMakeVisible(ttlSettleCombo);
+    //addAndMakeVisible(ttlSettleCombo);
+    
 
     ledButton = new UtilityButton("LED", Font("Small Text", 13, Font::plain));
     ledButton->setRadius(3.0f);
@@ -297,6 +307,7 @@ void DeviceEditor::channelStateChanged(Array<int> newChannels)
 
 void DeviceEditor::buttonClicked(Button* button)
 {
+    
     if (button == rescanButton && !acquisitionIsActive)
     {
         board->scanPorts();
@@ -386,6 +397,7 @@ void DeviceEditor::stopAcquisition()
 
 void DeviceEditor::saveVisualizerEditorParameters(XmlElement* xml)
 {
+    xml->setAttribute("CableLength", cableLengthInterface->getSelectedId());
     xml->setAttribute("SampleRate", sampleRateInterface->getSelectedId());
     xml->setAttribute("SampleRateString", sampleRateInterface->getText());
     xml->setAttribute("LowCut", bandwidthInterface->getLowerBandwidth());
@@ -395,7 +407,7 @@ void DeviceEditor::saveVisualizerEditorParameters(XmlElement* xml)
     xml->setAttribute("AudioOutputL", electrodeButtons[0]->getChannelNum());
     xml->setAttribute("AudioOutputR", electrodeButtons[1]->getChannelNum());
     xml->setAttribute("NoiseSlicer", audioInterface->getNoiseSlicerLevel());
-    xml->setAttribute("TTLFastSettle", ttlSettleCombo->getSelectedId());
+    //xml->setAttribute("TTLFastSettle", ttlSettleCombo->getSelectedId());
     xml->setAttribute("DAC_TTL", dacTTLButton->getToggleState());
     xml->setAttribute("DAC_HPF", dacHPFcombo->getSelectedId());
     xml->setAttribute("DSPOffset", dspoffsetButton->getToggleState());
@@ -428,6 +440,7 @@ void DeviceEditor::saveVisualizerEditorParameters(XmlElement* xml)
 void DeviceEditor::loadVisualizerEditorParameters(XmlElement* xml)
 {
 
+    
     sampleRateInterface->setSelectedId(xml->getIntAttribute("SampleRate"));
     bandwidthInterface->setLowerBandwidth(xml->getDoubleAttribute("LowCut"));
     bandwidthInterface->setUpperBandwidth(xml->getDoubleAttribute("HighCut"));
@@ -659,7 +672,7 @@ SampleRateInterface::SampleRateInterface(DeviceThread* board_,
 
     rateSelection = new ComboBox("Sample Rate");
     rateSelection->addItemList(sampleRateOptions, 1);
-    rateSelection->setSelectedId(17, dontSendNotification);
+    rateSelection->setSelectedId(12, dontSendNotification);
     rateSelection->addListener(this);
     rateSelection->setBounds(0, 12, 80, 20);
     addAndMakeVisible(rateSelection);
@@ -730,7 +743,7 @@ HeadstageOptionsInterface::HeadstageOptionsInterface(DeviceThread* board_,
             name = "B";
             break;
         case 2:
-            name = "C";
+            name = "G3";
             break;
         case 3:
             name = "D";
@@ -1113,4 +1126,86 @@ void DSPInterface::paint(Graphics& g)
 {
     g.setColour(Colours::darkgrey);
     g.setFont(Font("Small Text", 10, Font::plain));
+}
+
+CableLengthInterface::CableLengthInterface(DeviceThread* board_,
+    DeviceEditor* editor_) :
+    board(board_), editor(editor_)
+{
+
+    name = "Cable Length (Feet)";
+
+    cableLengthOptions.add("1");
+    cableLengthOptions.add("2");
+    cableLengthOptions.add("3");
+    cableLengthOptions.add("4");
+    cableLengthOptions.add("5");
+    cableLengthOptions.add("6");
+    cableLengthOptions.add("7");
+    cableLengthOptions.add("8");
+    cableLengthOptions.add("9");
+    cableLengthOptions.add("10");
+    cableLengthOptions.add("11");
+    cableLengthOptions.add("12");
+    cableLengthOptions.add("13");
+    cableLengthOptions.add("14");
+    cableLengthOptions.add("15");
+    
+    lengthSelection = new ComboBox("Cable Length (Feet)");
+    lengthSelection->addItemList(cableLengthOptions, 1);
+    lengthSelection->setSelectedId(12, dontSendNotification); //default to 12 foot cable
+    lengthSelection->setBounds(0, 12, 100, 20);
+    lengthSelection->addListener(this);
+    addAndMakeVisible(lengthSelection);
+
+
+    //defaults cable length to 12 feet
+    board->setCableLength(2, 12);
+}
+
+CableLengthInterface::~CableLengthInterface()
+{
+
+}
+
+int CableLengthInterface::getSelectedId()
+{
+    return lengthSelection->getSelectedId();
+}
+
+void CableLengthInterface::setSelectedId(int id)
+{
+    lengthSelection->setSelectedId(id);
+}
+
+void CableLengthInterface::paint(Graphics& g) {
+
+    g.setColour(Colours::darkgrey);
+
+    g.setFont(Font("Small Text", 10, Font::plain));
+
+    g.drawText(name, 0, 0, 100, 15, Justification::left, false);
+
+}
+
+void CableLengthInterface::comboBoxChanged(ComboBox* cb) {
+
+    LOGD("COMBO BOX CHANGED");
+
+    if (!(editor->acquisitionIsActive) && board->foundInputSource())
+    {
+        if (cb == lengthSelection)
+        {
+          
+            LOGD("Setting cable to length to index ", cb->getSelectedId() - 1);
+
+            board->setCableLength(2, cb->getSelectedId() - 1); //fixed for port C (G3)
+
+            CoreServices::updateSignalChain(editor);
+        }
+
+        else {
+            LOGD("NOT LENGTH SELECTION?????");
+        }
+    }
 }
