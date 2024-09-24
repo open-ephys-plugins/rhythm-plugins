@@ -972,13 +972,15 @@ void DeviceThread::updateSettings(OwnedArray<ContinuousChannel>* continuousChann
         }
     }
 
+    int numDigitalLines = boardType == INTAN_RHD_USB ? 16 : 8;
+
     EventChannel::Settings settings{
             EventChannel::Type::TTL,
             "Rhythm FPGA TTL Input",
             "Events on digital input lines of a Rhythm FPGA device",
             "rhythm-fpga-device.events",
             stream,
-            8
+            numDigitalLines
     };
 
     eventChannels->add(new EventChannel(settings));
