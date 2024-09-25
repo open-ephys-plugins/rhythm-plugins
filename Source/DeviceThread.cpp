@@ -974,6 +974,8 @@ void DeviceThread::updateSettings(OwnedArray<ContinuousChannel>* continuousChann
 
     int numDigitalLines = boardType == INTAN_RHD_USB ? 16 : 8;
 
+    LOGD("Number of digital lines enabled: ", numDigitalLines);
+
     EventChannel::Settings settings{
             EventChannel::Type::TTL,
             "Rhythm FPGA TTL Input",
@@ -2060,10 +2062,11 @@ int DeviceThread::getHeadstageChannel (int& hs, int ch) const
 
 void DeviceThread::enableBoardLeds(bool enable)
 {
-    settings.ledsEnabled = enable;
 
-    if (evalBoard == nullptr)
+    if (!deviceFound)
         return;
+
+    settings.ledsEnabled = enable;
 
     if (isAcquisitionActive())
         updateSettingsDuringAcquisition = true;
